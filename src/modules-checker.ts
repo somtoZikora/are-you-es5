@@ -31,7 +31,18 @@ export class ModulesChecker {
 
     dependencies.forEach(dependency => {
       const packagePath = path.join(nodeModulesDir, dependency)
-      const packageJson = require(path.join(packagePath, 'package.json'))
+      const rootPackagePath = path.join(
+        this.dir,
+        '../../node_modules',
+        dependency
+      )
+
+      let packageJson
+      try {
+        packageJson = require(path.join(packagePath, 'package.json'))
+      } catch (e) {
+        packageJson = require(path.join(rootPackagePath, 'package.json'))
+      }
 
       const mainScriptPath = this.getMainScriptPath(packageJson, packagePath)
       if (mainScriptPath) {
@@ -135,6 +146,11 @@ export class ModulesChecker {
 
     if (!packageJson) {
       console.error(`Failed to load package.json in ${this.dir}`)
+      return null
+    }
+
+    if (!packageJson.dependencies) {
+      console.error(`No node module dependencies in ${this.dir}`)
       return null
     }
 
